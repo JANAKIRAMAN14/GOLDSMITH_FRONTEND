@@ -10,6 +10,7 @@ import AddRecordPage from '../pages/AddRecordPage';
 import RecordsPage from '../pages/RecordsPage';
 import LoginPage from '../pages/LoginPage';
 import SignupPage from '../pages/SignupPage';
+import NotFoundPage from '../pages/NotFoundPage';
 
 function AppRoutes() {
   return (
@@ -39,7 +40,8 @@ function AppRoutes() {
         <Route path="/records" element={<RecordsPage />} />
       </Route>
 
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="/not-found" element={<NotFoundPage />} />
+      <Route path="*" element={<Navigate to="/not-found" replace />} />
     </Routes>
   );
 }

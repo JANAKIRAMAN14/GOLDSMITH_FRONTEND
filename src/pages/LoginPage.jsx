@@ -1,18 +1,20 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!formData.email.trim() || !formData.password.trim()) {
@@ -20,7 +22,12 @@ function LoginPage() {
       return;
     }
 
-    const result = loginUser(formData);
+    setSubmitting(true);
+    setError('');
+
+    const result = await login(formData);
+    setSubmitting(false);
+
     if (!result.ok) {
       setError(result.message);
       return;
@@ -34,8 +41,8 @@ function LoginPage() {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-900 text-center sm:text-xl">Login</h2>
-      <p className="mt-1 text-sm text-slate-600 text-center">Sign in to access your jewellery dashboard.</p>
+      <h2 className="text-center text-lg font-bold text-slate-900 sm:text-xl">Login</h2>
+      <p className="mt-1 text-center text-sm text-slate-600">Sign in to access your jewellery dashboard.</p>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div>
@@ -66,9 +73,10 @@ function LoginPage() {
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+          disabled={submitting}
+          className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
         >
-          Login
+          {submitting ? 'Logging in...' : 'Login'}
         </button>
       </form>
 

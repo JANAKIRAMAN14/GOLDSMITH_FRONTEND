@@ -1,23 +1,24 @@
 import { STORAGE_KEYS } from '../constants/storageKeys';
+import { apiRequest } from './apiClient';
 
-function getUsers() {
-  const raw = localStorage.getItem(STORAGE_KEYS.USERS);
-  if (!raw) return [];
+let accessToken = '';
 
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
+function saveSession({ accessToken: token, user }) {
+  accessToken = token || '';
+  localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(user));
 }
 
-function saveUsers(users) {
-  localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+function clearSession() {
+  accessToken = '';
+  localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+}
+
+export function getAccessToken() {
+  return accessToken;
 }
 
 export function isAuthenticated() {
-  return Boolean(localStorage.getItem(STORAGE_KEYS.AUTH_USER));
+  return Boolean(accessToken);
 }
 
 export function getCurrentUser() {
@@ -31,59 +32,80 @@ export function getCurrentUser() {
   }
 }
 
-export function signupUser({ name, email, password }) {
-  const users = getUsers();
-  const normalizedEmail = email.trim().toLowerCase();
+export async function signupUser({ name, email, password }) {
+  try {
+    const data = await apiRequest('/api/auth/signup', {
+      method: 'POST',
+      withAuth: false,
+      retryOn401: false,
+      body: { name, email, password }
+    });
 
-  const alreadyExists = users.some((user) => user.email === normalizedEmail);
-  if (alreadyExists) {
-    return { ok: false, message: 'Email already registered. Please login.' };
+    saveSession({ accessToken: data.accessToken, user: data.user });
+    return { ok: true, user: data.user };
+  } catch (error) {
+    return { ok: false, message: error.message || 'Signup failed' };
   }
-
-  const user = {
-    id: crypto.randomUUID(),
-    name: name.trim(),
-    email: normalizedEmail,
-    password
-  };
-
-  const nextUsers = [...users, user];
-  saveUsers(nextUsers);
-
-  localStorage.setItem(
-    STORAGE_KEYS.AUTH_USER,
-    JSON.stringify({
-      id: user.id,
-      name: user.name,
-      email: user.email
-    })
-  );
-
-  return { ok: true };
 }
 
-export function loginUser({ email, password }) {
-  const users = getUsers();
-  const normalizedEmail = email.trim().toLowerCase();
+export async function loginUser({ email, password }) {
+  try {
+    const data = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      withAuth: false,
+      retryOn401: false,
+      body: { email, password }
+    });
 
-  const matched = users.find((user) => user.email === normalizedEmail && user.password === password);
-
-  if (!matched) {
-    return { ok: false, message: 'Invalid email or password.' };
+    saveSession({ accessToken: data.accessToken, user: data.user });
+    return { ok: true, user: data.user };
+  } catch (error) {
+    return { ok: false, message: error.message || 'Login failed' };
   }
-
-  localStorage.setItem(
-    STORAGE_KEYS.AUTH_USER,
-    JSON.stringify({
-      id: matched.id,
-      name: matched.name,
-      email: matched.email
-    })
-  );
-
-  return { ok: true };
 }
 
-export function logoutUser() {
-  localStorage.removeItem(STORAGE_KEYS.AUTH_USER);
+export async function refreshSession() {
+  try {
+    const data = await apiRequest('/api/auth/refresh', {
+      method: 'POST',
+      withAuth: false,
+      retryOn401: false
+    });
+
+    saveSession({ accessToken: data.accessToken, user: data.user });
+    return true;
+  } catch (error) {
+    clearSession();
+    return false;
+  }
+}
+
+export async function fetchProfile() {
+  if (!accessToken) {
+    const refreshed = await refreshSession();
+    if (!refreshed) return null;
+  }
+
+  try {
+    const data = await apiRequest('/api/auth/me');
+    localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(data.user));
+    return data.user;
+  } catch (error) {
+    clearSession();
+    return null;
+  }
+}
+
+export async function logoutUser() {
+  try {
+    await apiRequest('/api/auth/logout', {
+      method: 'POST',
+      withAuth: false,
+      retryOn401: false
+    });
+  } catch (error) {
+    // Ignore logout API failures to ensure local session is cleared.
+  }
+
+  clearSession();
 }

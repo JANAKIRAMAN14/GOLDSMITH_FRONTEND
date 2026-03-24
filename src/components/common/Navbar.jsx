@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logoutUser } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
 
 const navItems = [
   { label: 'Home', to: '/' },
@@ -10,10 +10,10 @@ const navItems = [
 
 function Navbar() {
   const navigate = useNavigate();
-  const currentUser = getCurrentUser();
+  const { user, logout } = useAuth();
 
-  const handleLogout = () => {
-    logoutUser();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -43,8 +43,8 @@ function Navbar() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <p className="hidden text-sm font-medium text-slate-600 sm:block">
-              {currentUser?.name ? `Hi, ${currentUser.name}` : 'Logged in'}
+            <p className="rounded-full border border-brand-200 bg-brand-100 px-3 py-1 text-sm font-semibold text-brand-800 shadow-sm">
+              {user?.name ? `Hi, ${user.name}` : 'Logged in'}
             </p>
             <button
               type="button"

@@ -1,27 +1,49 @@
-import { createContext, useMemo, useState } from 'react';
-import { getSessionUser, loginUser, logoutUser, signupUser } from '../services/authService';
+import { createContext, useEffect, useMemo, useState } from 'react';
+import {
+  fetchProfile,
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+  signupUser
+} from '../services/authService';
 
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => getSessionUser());
+  const [user, setUser] = useState(() => getCurrentUser());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const bootstrap = async () => {
+      const profile = await fetchProfile();
+      setUser(profile);
+      setLoading(false);
+    };
+
+    bootstrap();
+  }, []);
 
   const value = useMemo(
     () => ({
       user,
+      loading,
       isLoggedIn: Boolean(user),
-      signup: (payload) => signupUser(payload),
-      login: (payload) => {
-        const sessionUser = loginUser(payload);
-        setUser(sessionUser);
-        return sessionUser;
+      signup: async (payload) => {
+        const result = await signupUser(payload);
+        if (result.ok) setUser(result.user);
+        return result;
       },
-      logout: () => {
-        logoutUser();
+      login: async (payload) => {
+        const result = await loginUser(payload);
+        if (result.ok) setUser(result.user);
+        return result;
+      },
+      logout: async () => {
+        await logoutUser();
         setUser(null);
       }
     }),
-    [user]
+    [user, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

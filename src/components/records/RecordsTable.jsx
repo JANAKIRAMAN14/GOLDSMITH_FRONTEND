@@ -1,6 +1,6 @@
 import { formatDate } from '../../utils/dateUtils';
 
-function RecordsTable({ records, onEdit, onDelete, onToggleStatus }) {
+function RecordsTable({ records, onEdit, onDelete, onToggleStatus, onDownloadRecord, onPreviewImage }) {
   if (!records.length) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center text-slate-500">
@@ -14,13 +14,15 @@ function RecordsTable({ records, onEdit, onDelete, onToggleStatus }) {
       <table className="min-w-full text-left text-sm">
         <thead className="bg-slate-100 text-slate-700">
           <tr>
+            <th className="px-3 py-3">Gold Price</th>
             <th className="px-3 py-3">Customer</th>
-            <th className="px-3 py-3">Item</th>
-            <th className="px-3 py-3">Image</th>
-            <th className="px-3 py-3">Gold Rate</th>
             <th className="px-3 py-3">Weight</th>
-            <th className="px-3 py-3">Total</th>
+            <th className="px-3 py-3">Item</th>
+            <th className="px-3 py-3">Stone Size</th>
             <th className="px-3 py-3">Status</th>
+            <th className="px-3 py-3">Other</th>
+            <th className="px-3 py-3">Image</th>
+            <th className="px-3 py-3">Total</th>
             <th className="px-3 py-3">Given Date</th>
             <th className="px-3 py-3">Delivery Date</th>
             <th className="px-3 py-3">Actions</th>
@@ -29,22 +31,11 @@ function RecordsTable({ records, onEdit, onDelete, onToggleStatus }) {
         <tbody>
           {records.map((record) => (
             <tr key={record.id} className="border-t border-slate-100">
-              <td className="px-3 py-3 font-medium text-slate-800">{record.customerName}</td>
-              <td className="px-3 py-3">{record.itemName}</td>
-              <td className="px-3 py-3">
-                {record.itemImage ? (
-                  <img
-                    src={record.itemImage}
-                    alt={record.itemName}
-                    className="h-12 w-12 rounded-lg border border-slate-200 object-cover"
-                  />
-                ) : (
-                  <span className="text-xs text-slate-400">No Image</span>
-                )}
-              </td>
               <td className="px-3 py-3">Rs {Number(record.goldRate).toLocaleString('en-IN')}</td>
+              <td className="px-3 py-3 font-medium text-slate-800">{record.customerName}</td>
               <td className="px-3 py-3">{record.weight} g</td>
-              <td className="px-3 py-3 font-semibold">Rs {Number(record.totalAmount).toLocaleString('en-IN')}</td>
+              <td className="px-3 py-3">{record.itemName}</td>
+              <td className="px-3 py-3">{record.stoneSize || '-'}</td>
               <td className="px-3 py-3">
                 <button
                   type="button"
@@ -58,10 +49,39 @@ function RecordsTable({ records, onEdit, onDelete, onToggleStatus }) {
                   {record.status}
                 </button>
               </td>
+              <td className="max-w-[180px] truncate px-3 py-3" title={record.other || ''}>
+                {record.other || '-'}
+              </td>
+              <td className="px-3 py-3">
+                {record.itemImage ? (
+                  <button
+                    type="button"
+                    onClick={() => onPreviewImage(record.itemImage, record.itemName)}
+                    className="rounded-lg border border-slate-200 transition hover:opacity-90"
+                    title="Click to preview"
+                  >
+                    <img
+                      src={record.itemImage}
+                      alt={record.itemName}
+                      className="h-12 w-12 rounded-lg object-cover"
+                    />
+                  </button>
+                ) : (
+                  <span className="text-xs text-slate-400">No Image</span>
+                )}
+              </td>
+              <td className="px-3 py-3 font-semibold">Rs {Number(record.totalAmount).toLocaleString('en-IN')}</td>
               <td className="px-3 py-3">{formatDate(record.givenDate)}</td>
               <td className="px-3 py-3">{formatDate(record.deliveryDate)}</td>
               <td className="px-3 py-3">
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onDownloadRecord(record)}
+                    className="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700"
+                  >
+                    Download
+                  </button>
                   <button
                     type="button"
                     onClick={() => onEdit(record)}

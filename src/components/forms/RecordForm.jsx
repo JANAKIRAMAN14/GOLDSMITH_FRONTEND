@@ -4,27 +4,32 @@ import { DEFAULT_STATUS, STATUS_OPTIONS } from '../../constants/defaults';
 function RecordForm({
   initialValues,
   defaultGoldRate,
+  lockGoldRate = false,
   onSubmit,
   onCancel,
   submitLabel = 'Save Record'
 }) {
   const [formData, setFormData] = useState({
     id: initialValues?.id || null,
-    customerName: initialValues?.customerName || '',
-    itemName: initialValues?.itemName || '',
-    itemImage: initialValues?.itemImage || '',
     goldRate: initialValues?.goldRate ?? defaultGoldRate ?? '',
+    customerName: initialValues?.customerName || '',
     weight: initialValues?.weight || '',
-    totalAmount: initialValues?.totalAmount || 0,
+    itemName: initialValues?.itemName || '',
+    stoneSize: initialValues?.stoneSize || '',
     status: initialValues?.status || DEFAULT_STATUS,
+    other: initialValues?.other || '',
+    itemImage: initialValues?.itemImage || '',
+    itemImageFile: null,
+    totalAmount: initialValues?.totalAmount || 0,
     givenDate: initialValues?.givenDate || new Date().toISOString().slice(0, 10),
     deliveryDate: initialValues?.deliveryDate || ''
   });
+
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (!initialValues && defaultGoldRate) {
-      setFormData((prev) => ({ ...prev, goldRate: defaultGoldRate }));
+    if (!initialValues && Number(defaultGoldRate) > 0) {
+      setFormData((prev) => ({ ...prev, goldRate: Number(defaultGoldRate) }));
     }
   }, [defaultGoldRate, initialValues]);
 
@@ -44,21 +49,23 @@ function RecordForm({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormData((prev) => ({ ...prev, itemImage: String(reader.result) }));
-    };
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    setFormData((prev) => ({
+      ...prev,
+      itemImage: previewUrl,
+      itemImageFile: file
+    }));
   };
 
   const validate = () => {
     const nextErrors = {};
+
+    if (Number(formData.goldRate) <= 0) nextErrors.goldRate = 'Gold rate must be greater than zero.';
     if (!formData.customerName.trim()) nextErrors.customerName = 'Customer name is required.';
+    if (Number(formData.weight) <= 0) nextErrors.weight = 'Weight must be greater than zero.';
     if (!formData.itemName.trim()) nextErrors.itemName = 'Item name is required.';
     if (!formData.givenDate) nextErrors.givenDate = 'Given date is required.';
     if (!formData.deliveryDate) nextErrors.deliveryDate = 'Delivery date is required.';
-    if (Number(formData.goldRate) <= 0) nextErrors.goldRate = 'Gold rate must be greater than zero.';
-    if (Number(formData.weight) <= 0) nextErrors.weight = 'Weight must be greater than zero.';
     if (formData.deliveryDate && formData.givenDate && formData.deliveryDate < formData.givenDate) {
       nextErrors.deliveryDate = 'Delivery date cannot be before given date.';
     }
@@ -87,6 +94,19 @@ function RecordForm({
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Gold Price (Rs / g)</label>
+          <input
+            type="number"
+            name="goldRate"
+            value={formData.goldRate}
+            onChange={handleChange}
+            disabled={lockGoldRate}
+            className={`${inputStyles} ${lockGoldRate ? 'cursor-not-allowed bg-slate-100' : ''}`}
+          />
+          {errors.goldRate ? <p className="mt-1 text-xs text-red-600">{errors.goldRate}</p> : null}
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm font-medium text-slate-700">Customer Name</label>
           <input
             name="customerName"
@@ -96,6 +116,18 @@ function RecordForm({
             placeholder="Enter customer name"
           />
           {errors.customerName ? <p className="mt-1 text-xs text-red-600">{errors.customerName}</p> : null}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Given Weight (grams)</label>
+          <input
+            type="number"
+            name="weight"
+            value={formData.weight}
+            onChange={handleChange}
+            className={inputStyles}
+          />
+          {errors.weight ? <p className="mt-1 text-xs text-red-600">{errors.weight}</p> : null}
         </div>
 
         <div>
@@ -111,36 +143,13 @@ function RecordForm({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Gold Rate (Rs / g)</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Stone Size</label>
           <input
-            type="number"
-            name="goldRate"
-            value={formData.goldRate}
+            name="stoneSize"
+            value={formData.stoneSize}
             onChange={handleChange}
             className={inputStyles}
-          />
-          {errors.goldRate ? <p className="mt-1 text-xs text-red-600">{errors.goldRate}</p> : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Weight (grams)</label>
-          <input
-            type="number"
-            name="weight"
-            value={formData.weight}
-            onChange={handleChange}
-            className={inputStyles}
-          />
-          {errors.weight ? <p className="mt-1 text-xs text-red-600">{errors.weight}</p> : null}
-        </div>
-
-        <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Total Amount</label>
-          <input
-            name="totalAmount"
-            value={formData.totalAmount}
-            disabled
-            className={`${inputStyles} cursor-not-allowed bg-slate-100`}
+            placeholder="Optional"
           />
         </div>
 
@@ -153,6 +162,28 @@ function RecordForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="mb-1 block text-sm font-medium text-slate-700">Other</label>
+          <textarea
+            name="other"
+            value={formData.other}
+            onChange={handleChange}
+            rows={3}
+            className={inputStyles}
+            placeholder="Additional notes"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Total Amount</label>
+          <input
+            name="totalAmount"
+            value={formData.totalAmount}
+            disabled
+            className={`${inputStyles} cursor-not-allowed bg-slate-100`}
+          />
         </div>
 
         <div>

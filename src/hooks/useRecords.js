@@ -1,23 +1,54 @@
-import { useMemo, useState } from 'react';
-import { createRecord, deleteRecord, getAllRecords, updateRecord } from '../services/recordService';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  createRecord,
+  deleteRecord,
+  getAllRecords,
+  toggleRecordStatus,
+  updateRecord
+} from '../services/recordService';
 import { matchesFilterByDate } from '../utils/dateUtils';
 
 export function useRecords() {
-  const [records, setRecords] = useState(() => getAllRecords());
+  const [records, setRecords] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('Daily');
   const [filterValue, setFilterValue] = useState(new Date().toISOString().slice(0, 10));
 
-  const addRecord = (record) => {
-    setRecords(createRecord(record));
+  const loadRecords = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await getAllRecords();
+      setRecords(list);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRecords();
+  }, [loadRecords]);
+
+  const addRecord = async (record) => {
+    const created = await createRecord(record);
+    setRecords((prev) => [created, ...prev]);
+    return created;
   };
 
-  const editRecord = (record) => {
-    setRecords(updateRecord(record));
+  const editRecord = async (record) => {
+    const updated = await updateRecord(record);
+    setRecords((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+    return updated;
   };
 
-  const removeRecord = (id) => {
-    setRecords(deleteRecord(id));
+  const removeRecord = async (id) => {
+    await deleteRecord(id);
+    setRecords((prev) => prev.filter((record) => record.id !== id));
+  };
+
+  const toggleStatus = async (id) => {
+    const updated = await toggleRecordStatus(id);
+    setRecords((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
   };
 
   const filteredRecords = useMemo(() => {
@@ -32,6 +63,7 @@ export function useRecords() {
 
   return {
     records,
+    loading,
     filteredRecords,
     searchTerm,
     setSearchTerm,
@@ -41,6 +73,8 @@ export function useRecords() {
     setFilterValue,
     addRecord,
     editRecord,
-    removeRecord
+    removeRecord,
+    toggleStatus,
+    reload: loadRecords
   };
 }

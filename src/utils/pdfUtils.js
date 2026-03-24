@@ -16,23 +16,27 @@ export function downloadRecordsPdf({ records, dateRangeLabel }) {
     startY: 36,
     head: [
       [
+        'Gold Price',
         'Customer',
+        'Weight',
         'Item',
-        'Gold Rate',
-        'Weight (g)',
-        'Total',
+        'Stone Size',
         'Status',
+        'Other',
+        'Total',
         'Given Date',
         'Delivery Date'
       ]
     ],
     body: records.map((record) => [
-      record.customerName,
-      record.itemName,
       record.goldRate,
+      record.customerName,
       record.weight,
-      record.totalAmount,
+      record.itemName,
+      record.stoneSize || '-',
       record.status,
+      record.other || '-',
+      record.totalAmount,
       formatDate(record.givenDate),
       formatDate(record.deliveryDate)
     ])

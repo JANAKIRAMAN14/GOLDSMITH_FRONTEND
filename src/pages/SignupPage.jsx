@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signupUser } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 
 function SignupPage() {
   const navigate = useNavigate();
+  const { signup } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -11,13 +12,14 @@ function SignupPage() {
     confirmPassword: ''
   });
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim()) {
@@ -25,8 +27,8 @@ function SignupPage() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (formData.password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
 
@@ -35,7 +37,12 @@ function SignupPage() {
       return;
     }
 
-    const result = signupUser(formData);
+    setSubmitting(true);
+    setError('');
+
+    const result = await signup(formData);
+    setSubmitting(false);
+
     if (!result.ok) {
       setError(result.message);
       return;
@@ -49,7 +56,7 @@ function SignupPage() {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-900 sm:text-xl text-center">Sign Up</h2>
+      <h2 className="text-center text-lg font-bold text-slate-900 sm:text-xl">Sign Up</h2>
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>
@@ -102,9 +109,10 @@ function SignupPage() {
 
         <button
           type="submit"
-          className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700"
+          disabled={submitting}
+          className="w-full rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-brand-400"
         >
-          Create Account
+          {submitting ? 'Creating...' : 'Create Account'}
         </button>
       </form>
 

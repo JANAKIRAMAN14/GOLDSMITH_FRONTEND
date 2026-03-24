@@ -34,8 +34,8 @@ function LoginPage() {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Login</h2>
-      <p className="mt-1 text-sm text-slate-600">Sign in to access your jewellery dashboard.</p>
+      <h2 className="text-lg font-bold text-slate-900 text-center sm:text-xl">Login</h2>
+      <p className="mt-1 text-sm text-slate-600 text-center">Sign in to access your jewellery dashboard.</p>
 
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div>

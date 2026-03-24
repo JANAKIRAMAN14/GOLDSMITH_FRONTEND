@@ -49,9 +49,7 @@ function SignupPage() {
 
   return (
     <section>
-      <h2 className="text-lg font-bold text-slate-900 sm:text-xl">Sign Up</h2>
-      <p className="mt-1 text-sm text-slate-600">Create your account with the same dashboard theme.</p>
-
+      <h2 className="text-lg font-bold text-slate-900 sm:text-xl text-center">Sign Up</h2>
       <form onSubmit={handleSubmit} className="mt-5 space-y-4">
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700">Full Name</label>

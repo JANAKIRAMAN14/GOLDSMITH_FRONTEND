@@ -17,7 +17,7 @@ function NotFoundPage() {
               The page you are trying to open does not exist or you do not have permission to view it without login.
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-3">
+            {/* <div className="mt-6 flex flex-wrap gap-3">
               {loggedIn ? (
                 <Link
                   to="/"
@@ -40,7 +40,7 @@ function NotFoundPage() {
               >
                 {loggedIn ? 'Home' : 'Create Account'}
               </Link>
-            </div>
+            </div> */}
           </div>
 
           <div className="relative overflow-hidden rounded-2xl border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-slate-100 p-6">

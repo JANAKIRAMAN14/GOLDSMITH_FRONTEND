@@ -3,7 +3,7 @@ import { isAuthenticated } from '../../services/authService';
 
 function ProtectedRoute({ children }) {
   if (!isAuthenticated()) {
-    return <Navigate to="/not-found" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

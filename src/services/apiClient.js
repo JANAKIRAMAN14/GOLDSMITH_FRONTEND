@@ -1,13 +1,21 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://goldsmith-backend.onrender.com'
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://goldsmith-backend.onrender.com';
+
+function resolveApiUrl(path) {
+  const baseUrl = String(RAW_API_BASE_URL).trim().replace(/\/+$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+  // Support both base forms:
+  // - https://host
+  // - https://host/api
+  if (baseUrl.endsWith('/api') && normalizedPath.startsWith('/api/')) {
+    return `${baseUrl}${normalizedPath.slice(4)}`;
+  }
+
+  return `${baseUrl}${normalizedPath}`;
+}
 
 export async function apiRequest(path, options = {}) {
-  const {
-    method = 'GET',
-    body,
-    headers = {},
-    withAuth = true,
-    retryOn401 = true
-  } = options;
+  const { method = 'GET', body, headers = {}, withAuth = true, retryOn401 = true } = options;
 
   const finalHeaders = { ...headers };
   const hasBody = body !== undefined && body !== null;
@@ -25,7 +33,7 @@ export async function apiRequest(path, options = {}) {
     }
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(resolveApiUrl(path), {
     method,
     headers: finalHeaders,
     credentials: 'include',
@@ -49,7 +57,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (!response.ok) {
-    const message = data?.message || 'Request failed';
+    const message = data?.message || `Request failed (${response.status})`;
     throw new Error(message);
   }
 

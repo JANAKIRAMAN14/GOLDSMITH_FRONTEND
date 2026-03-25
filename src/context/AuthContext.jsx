@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchProfile,
   getCurrentUser,
@@ -12,8 +12,15 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getCurrentUser());
   const [loading, setLoading] = useState(true);
+  const bootstrappedRef = useRef(false);
 
   useEffect(() => {
+    if (bootstrappedRef.current) {
+      return;
+    }
+
+    bootstrappedRef.current = true;
+
     const bootstrap = async () => {
       const profile = await fetchProfile();
       setUser(profile);

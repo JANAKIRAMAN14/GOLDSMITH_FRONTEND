@@ -81,6 +81,13 @@ export async function refreshSession() {
 }
 
 export async function fetchProfile() {
+  const cachedUser = getCurrentUser();
+
+  // Avoid refresh calls for first-time visitors with no known session.
+  if (!accessToken && !cachedUser) {
+    return null;
+  }
+
   if (!accessToken) {
     const refreshed = await refreshSession();
     if (!refreshed) return null;

@@ -8,6 +8,7 @@ import { AuthProvider } from './context/AuthContext';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter
+      basename="/GOLDSMITH_FRONTEND"
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true

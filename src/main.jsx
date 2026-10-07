@@ -5,13 +5,12 @@ import App from './App';
 import './index.css';
 import { AuthProvider } from './context/AuthContext';
 
-const isGitHubPages = window.location.hostname.includes('github.io');
-const Router = isGitHubPages ? HashRouter : BrowserRouter;
+// const isGitHubPages = window.location.hostname.includes('github.io');
+// const Router = isGitHubPages ? HashRouter : BrowserRouter;
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Router
-      basename={isGitHubPages ? '/GOLDSMITH_FRONTEND' : undefined}
+    <BrowserRouter
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true
@@ -20,6 +19,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <App />
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   </React.StrictMode>
 );
